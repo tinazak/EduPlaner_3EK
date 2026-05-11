@@ -1,0 +1,26 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<article>
+    <h1>Hello, world!</h1>
+
+    <p>Welcome to your new app. <i class="fa-solid fa-face-laugh-wink"></i></p>
+
+    <Modal @ref="myModal" Title="Beispiel Modal" OpenButtonText="Modal öffnen">
+        <p>Das ist ein Beispiel Modal mit Blazor und Pico</p>
+        <button class="secondary" @onclick="myModal.CloseModal">Abbrechen</button>
+        <button class="pico-background-azure-500" @onclick="TuIrgendwas">OK</button>
+    </Modal>
+</article>
+
+@code{
+    private Modal myModal = default!; // Modal Komponente   
+
+    private void TuIrgendwas()
+    {
+        Console.WriteLine("Fertig.");
+        myModal.CloseModal(); // Schließe Modal nach der Aktion
+    }
+
+}
