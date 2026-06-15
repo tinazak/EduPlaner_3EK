@@ -1,29 +1,94 @@
-﻿@page "/"
+﻿@page "/home"
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
+<PageTitle>EduPlaner</PageTitle>
 
-<article>
-    <h1>Herzlich Wilkommen auf EduPlaner</h1>
-
-    <p>Mehr Fokus, weniger Chaos. Dein digitaler Begleiter.</p>
-
-    <Modal @ref="myModal" Title="Beispiel Modal" OpenButtonText="Modal öffnen">
-        <p>Das ist ein Beispiel Modal mit Blazor und Pico</p>
-        <button class="secondary" @onclick="myModal.CloseModal">Abbrechen</button>
-        <button class="pico-background-azure-500" @onclick="TuIrgendwas">OK</button>
-    </Modal>
-
-</article>
-
-
-
-@code{
-    private Modal myModal = default!; // Modal Komponente   
-
-    private void TuIrgendwas()
-    {
-        Console.WriteLine("Fertig.");
-        myModal.CloseModal(); // Schließe Modal nach der Aktion
+<style>
+    body {
+        background: #e3ebe3;
     }
 
+    .dashboard-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 4rem 1rem;
+    }
+
+    .welcome-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .welcome-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+        color: #2c3e2c;
+    }
+
+    .welcome-header p {
+        font-size: 1.2rem;
+        color: #556b55;
+    }
+
+    .action-card {
+        background: rgba(255, 255, 255, 0.9); 
+        border: 2px solid rgba(135, 169, 135, 0.3);
+        border-radius: 20px;
+        padding: 3.5rem 2.5rem;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(118, 150, 118, 0.15); 
+    }
+
+    .action-card h3 {
+        color: #3b523b;
+        font-weight: 600;
+    }
+
+    .btn-salbei {
+        background-color: #769676;
+        border: none ;
+        color: white;
+        max-width: 280px;
+        margin: 0 auto;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.85rem 2rem;
+        cursor: pointer;
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(118, 150, 118, 0.3);
+    }
+
+    .btn-salbei:hover {
+        background-color: #5f7a5f;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(118, 150, 118, 0.4);
+    }
+</style>
+
+<div class="dashboard-container">
+
+    <div class="welcome-header">
+        <h1>Herzlich willkommen auf <strong>EduPlaner</strong></h1>
+        <p>Mehr Fokus, weniger Chaos. Dein digitaler Begleiter für die Schule.</p>
+    </div>
+
+    <article class="action-card">
+        <h3>Bereit für die Planung?</h3>
+        <p>
+            Öffne deinen interaktiven Jahreskalender, um neue Termine und Geburtstage einzutragen oder bestehende Einträge anzusehen.
+        </p>
+
+        <button class="btn-salbei" @onclick="NavigiereZumKalender"> Zum Kalender wechseln</button>
+    </article>
+
+</div>
+
+@code {
+    private void NavigiereZumKalender()
+    {
+        NavigationManager.NavigateTo("/kalender");
+    }
 }

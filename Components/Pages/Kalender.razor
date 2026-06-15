@@ -1,79 +1,274 @@
 ﻿@page "/kalender"
-
-<h3>Kalender</h3>
+@inject HAK_BlazorPicoTemplate.Services.TerminService TerminService
+@using HAK_BlazorPicoTemplate.Models
 
 <article>
-    <h1>Kalender</h1>
-    <p>Trage hier deine Termine ein: </p>
+	<h1>Jahreskalender 2026</h1>
+	<p>Klicke auf einen Tag, um einen Termin einzutragen:</p>
 
-    <!--Tabelle für den Kalender-->
-    <table>
-        <thead data-theme="light">
-            <tr>
-                <th class="contered" colspan="10">Mai 2026</th>
-            </tr>
+	<div class="kalender-grid">
+		@foreach (var monat in MonatsKalender)
+		{
+			<div class="monat-container">
+				<table>
+					<thead data-theme="light">
+						<tr>
+							<th class="centered" colspan="7">@monat.MonatsName</th>
+						</tr>
 
-            <tr>
-                <th>Mo</th>
-                <th>Di</th>
-                <th>Mi</th>
-                <th>Do</th>
-                <th>Fr</th>
-                <th>Sa</th>
-                <th>So</th>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>1</td>
-                <td>2</td>
-                <td>3</td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td>5</td>
-                <td>6</td>
-                <td>7</td>
-                <td>8</td>
-                <td>9</td>
-                <td>10</td>
-            </tr>
+						<tr>
+							<th>Mo</th>
+							<th>Di</th>
+							<th>Mi</th>
+							<th>Do</th>
+							<th>Fr</th>
+							<th>Sa</th>
+							<th>So</th>
+						</tr>
+					</thead>
 
-            <tr>
-                <td>11</td>
-                <td>12</td>
-                <td>13</td>
-                <td>14</td>
-                <td>15</td>
-                <td>16</td>
-                <td>17</td>
-            </tr>
-
-            <tr>
-                <td>18</td>
-                <td>19</td>
-                <td>20</td>
-                <td>21</td>
-                <td>22</td>
-                <td>23</td>
-                <td>24</td>
-            </tr>
-
-            <tr>
-                <td>25</td>
-                <td>26</td>
-                <td>27</td>
-                <td>28</td>
-                <td>29</td>
-                <td>30</td>
-                <td>31</td>
-            </tr>
-        </thead>
-    </table>
+					<tbody>
+						@foreach (var woche in monat.Wochen)
+						{
+							<tr>
+								@foreach (var tag in woche)
+								{
+									@if (tag > 0)
+									{
+										<td class="clickable @GetTerminKlasse(monat.MonatsNummer, tag)"
+											@onclick="() => TagAuswaelen(monat.MonatsNummer, tag)">
+											@tag
+										</td>
+									}
+									else
+									{
+										<td></td>
+									}
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
 </article>
 
+<div>
+	<Modal @ref="terminModal" Title="Termin hinzufügen">
+		<p>Du hast den <strong>@AusgewaelterTag. @AusgewahlterMonatsName @Jahr</strong> ausgewählt.</p>
+
+		@if (bestehenderTermin != null)
+		{
+			<div class="bestehender-termin-box">
+				<strong>Bestehender Termin:</strong>
+				<div>Titel: @bestehenderTermin.Titel</div>
+				@if (bestehenderTermin.Beschreibung.Length > 0)
+				{
+					<div>Beschreibung: @bestehenderTermin.Beschreibung</div>
+				}
+			</div>
+		}
+
+		<p>Bitte folgende Felder ausfüllen um einen Termin einzutragen:</p>
+
+		<EditForm Model="@neuerTermin" OnValidSubmit="TerminSpeichern">
+			<InputText @bind-Value="neuerTermin.Titel" placeholder="Termintitel..." aria-label="Text" />
+			<InputTextArea @bind-Value="neuerTermin.Beschreibung" placeholder="Beschreibung..." />
+
+			<fieldset class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 15px;">
+				<button type="button" class="secondary" style="margin-bottom: 0;" @onclick="terminModal.CloseModal">Abbrechen</button>
+				<button type="submit" class="pico-background-azure-500" style="margin-bottom: 0;">Speichern</button>
+			</fieldset>
+		</EditForm>
+	</Modal>
+</div>
+
 @code {
+	private int Jahr = 2026;
+	private string AusgewahlterMonatsName = "";
+	private int AusgewaelterMonat;
+	private int AusgewaelterTag;
+	private Modal terminModal = default!;
+
+	private Termin neuerTermin = new();
+	private Termin? bestehenderTermin;
+
+	private List<Termin> gespeicherterTermin = new();
+	private List<MonatStruktur> MonatsKalender = new();
+
+	private string GetTerminKlasse(int monat, int tag)
+	{
+		if (HatTermin(monat, tag))
+		{
+			return "hat-termin";
+		}
+		return string.Empty;
+	}
+
+	private static readonly string[] MonatsName ={
+		"Jänner", "Februar", "März","April","Mai","Juni","Juli","August","September","Oktober","November", "Dezember"
+	};
+
+	protected override void OnInitialized() 
+	{
+		GeneriereJahreskalender();
+	}
+
+	private void GeneriereJahreskalender()
+	{
+		MonatsKalender.Clear();
+
+		for (int monat = 1; monat <= 12; monat++)
+		{
+			var monatStruktur = new MonatStruktur
+			{
+				MonatsNummer = monat,
+				MonatsName = MonatsName[monat - 1],
+
+				Wochen = GeneriereMonat(Jahr, monat)
+			};
+			MonatsKalender.Add(monatStruktur);
+		}
+	}
+
+	private void TagAuswaelen(int monat, int tag)
+	{
+		AusgewaelterTag = tag;
+		AusgewaelterMonat = monat;
+		AusgewahlterMonatsName = MonatsName[monat - 1];
+
+		bestehenderTermin = gespeicherterTermin.FirstOrDefault(t => t.Datum.Month == monat && t.Datum.Day == tag && t.Datum.Year == Jahr); // Sucht den ersten passenden Termin oder gibt null zurück, wenn keiner existiert.
+
+		if (bestehenderTermin != null)
+		{
+			neuerTermin = new Termin { Datum = bestehenderTermin.Datum, Titel = bestehenderTermin.Titel, Beschreibung = bestehenderTermin.Beschreibung };
+		}
+		else
+		{
+			neuerTermin = new Termin { Datum = new DateTime(Jahr, monat, tag) };
+		}
+
+		terminModal.OpenModal();
+	}
+
+	private void TerminSpeichern()
+	{
+		if (bestehenderTermin != null)
+		{
+			gespeicherterTermin.Remove(bestehenderTermin);
+		}
+
+		gespeicherterTermin.Add(neuerTermin);
+		terminModal.CloseModal();
+	}
+
+	private bool HatTermin(int monat, int tag)
+	{
+		return gespeicherterTermin.Any(t => t.Datum.Month == monat && t.Datum.Day == tag && t.Datum.Year == Jahr);
+	}
+
+	private List<List<int>> GeneriereMonat(int jahr, int monat)
+	{
+		var wochen = new List<List<int>>();
+		int tageImMonat = DateTime.DaysInMonth(jahr, monat);
+
+		var ersterTag = new DateTime(jahr, monat, 1);
+		int startWochentag = (int)ersterTag.DayOfWeek;
+
+		if (startWochentag == 0)
+		{
+			startWochentag = 7;
+		}
+
+		var aktuelleWoche = new List<int>();
+
+		// Leere Tage am Monatsanfang mit 0 auffüllen
+		for (int i = 1; i < startWochentag; i++)
+		{
+			aktuelleWoche.Add(0);
+		}
+
+		// Tage des Monats befüllen
+		for (int tag = 1; tag <= tageImMonat; tag++)
+		{
+			aktuelleWoche.Add(tag);
+
+			if (aktuelleWoche.Count == 7)
+			{
+				wochen.Add(aktuelleWoche);
+				aktuelleWoche = new List<int>();
+			}
+		}
+
+		// Die unvollständige letzte Woche abfangen und mit 0 auffüllen
+		if (aktuelleWoche.Count > 0)
+		{
+			while (aktuelleWoche.Count < 7)
+			{
+				aktuelleWoche.Add(0);
+			}
+
+			wochen.Add(aktuelleWoche);
+		}
+
+		return wochen;
+	}
 
 }
+
+<style>
+	body {
+		background: #e3ebe3;
+	}
+
+	.centered {
+		text-align: center;
+	}
+
+	.clickable {
+		cursor: pointer;
+	}
+
+		.clickable:hover {
+			background-color: #f5f5f5;
+		}
+
+	.kalender-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 20px;
+	}
+
+	.monat-container {
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		padding: 10px;
+	}
+
+		.monat-container table {
+			width: 100%;
+			font-size: 0.85rem;
+		}
+
+		.monat-container th, .monat-container td {
+			padding: 4px;
+			text-align: center;
+		}
+
+	.hat-termin {
+		background-color: #ccd6cc;
+		color: #152415;
+		font-weight: bold;
+		border-radius: 4px;
+	}
+
+	.bestehender-termin-box {
+		background-color: #f7fafc;
+		border-left: 4px solid #ccd6cc;
+		padding: 10px;
+		margin-bottom: 15px;
+		border-radius: 0 4px 4px 0;
+	}
+</style>
+

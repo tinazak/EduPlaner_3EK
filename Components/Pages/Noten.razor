@@ -1,0 +1,87 @@
+﻿@page "/noten"
+@using HAK_BlazorPicoTemplate.Models
+
+<h3>Notenrechner (Noten 1-5)</h3>
+
+<article>
+    <input @bind="neuesFach" placeholder="Fach (z.B. Mathe)" />
+    <input @bind="neueNote" type="number" min="1" max="5" placeholder="Note (1-5)" />
+    <button @onclick="NoteHinzufuegen">Hinzufügen</button>
+</article>
+
+<article style="text-align: center;">
+    <h4>Notenschnitt: @Durchschnitt.ToString()</h4>
+    <p>Anzahl der Noten: @NotenListe.Count</p>
+</article>
+
+<article>
+    <h5>Deine Noten:</h5>
+    @if (NotenListe.Count == 0)
+    {
+        <p>Noch keine Noten eingetragen.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var note in NotenListe)
+            {
+                <li style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    @note.Fach: <strong>@note.Note</strong>
+                    <button class="secondary outline" style="width: auto; padding: 2px 10px; margin: 0;" @onclick="() => NoteLoeschen(note.Fach)">Löschen</button>
+                </li>
+            }
+        </ul>
+    }
+</article>
+
+@code {
+    private List<NoteEintrag> NotenListe = new();
+
+    private string neuesFach = "";
+    private int neueNote = 1;
+    private double Durchschnitt = 0.0;
+
+    private void NoteHinzufuegen()
+    {
+        if (!string.IsNullOrWhiteSpace(neuesFach) && neueNote >= 1 && neueNote <= 5)
+        {
+            // Neues Objekt wird der Liste hinzugefügt
+            NotenListe.Add(new NoteEintrag { Fach = neuesFach, Note = neueNote });
+
+            // Felder zurücksetzen
+            neuesFach = "";
+            neueNote = 1;
+
+            BerechneSchnitt();
+        }
+    }
+
+    private void NoteLoeschen(string fach)
+    {
+        // Sucht den Eintrag mit diesem Fachnamen und löscht ihn
+        var eintragZumLoeschen = NotenListe.FirstOrDefault(n => n.Fach == fach);
+        if (eintragZumLoeschen != null)
+        {
+            NotenListe.Remove(eintragZumLoeschen);
+        }
+        BerechneSchnitt();
+    }
+
+    private void BerechneSchnitt()
+    {
+        if (NotenListe.Count == 0)
+        {
+            Durchschnitt = 0.0;
+            return;
+        }
+
+        // Summiert die .Note-Eigenschaft aller Einträge
+        Durchschnitt = (double)NotenListe.Sum(n => n.Note) / NotenListe.Count;
+    }
+}
+
+<style>
+    body {
+        background: #e3ebe3;
+    }
+</style>

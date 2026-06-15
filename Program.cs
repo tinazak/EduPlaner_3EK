@@ -1,4 +1,7 @@
 using HAK_BlazorPicoTemplate.Components;
+using HAK_BlazorPicoTemplate.Database;
+using HAK_BlazorPicoTemplate.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace HAK_BlazorPicoTemplate
 {
@@ -11,6 +14,12 @@ namespace HAK_BlazorPicoTemplate
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            // Register Database Context
+            builder.Services.AddDbContextFactory<TerminDbContext>(options => 
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<TerminService>();
 
             var app = builder.Build();
 
@@ -34,4 +43,6 @@ namespace HAK_BlazorPicoTemplate
             app.Run();
         }
     }
+
+    
 }
